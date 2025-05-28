@@ -3,6 +3,7 @@
 $admin = "admin@domain.com"
 
 # Criar certificado autoassinado
+
 $params = @{
     DnsName = "sub.domain.com"
     CertStoreLocation = "Cert:\LocalMachine\My"
@@ -15,6 +16,7 @@ $params = @{
 $cert = New-SelfSignedCertificate @params
 
 # Conceder permissão ao serviço ADSync
+
 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
 $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\Keys\$($rsaCert.key.UniqueName)"
 $permissions = Get-Acl -Path $path
@@ -29,11 +31,13 @@ $permissions = Get-Acl -Path $path
 $permissions.Access
 
 # Configurar o Service Principal com o certificado
+
 Set-ADSyncScheduler -SyncCycleEnabled $false
 Add-EntraApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 Add-ADSyncApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 
 # Validar e reativar sincronização
+
 Get-ADSyncEntraConnectorCredential
 Set-ADSyncScheduler -SyncCycleEnabled $true
 Rotação de Certificado (Rollover)
