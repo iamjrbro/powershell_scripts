@@ -1,0 +1,61 @@
+
+# Connecting Azure AD
+Connect-AzureAD
+
+# Checking if a group is empty (without members)
+function Check-GroupEmpty {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$GroupId
+    )
+    $members = Get-AzureADGroupMember -ObjectId $GroupId -All $true
+    if ($members.Count -eq 0) {
+        Write-Output "O grupo com ID $GroupId está vazio."
+    } else {
+        Write-Output "O grupo com ID $GroupId NÃO está vazio."
+    }
+}
+
+ 
+$groups = Get-AzureADGroup -All $true
+foreach ($group in $groups) {
+    Write-Output "Verificando grupo: $($group.DisplayName)"
+    Check-GroupEmpty -GroupId $group.ObjectId
+}
+
+
+
+-----------------------------------------------------------------------------
+
+Connect-AzAccount 
+$groups = Get-AzADGroup
+$users = Get-AzADUser -Filter "accountEnabled eq false"
+ 
+foreach ($user in $users) {
+    $userId = $user.Id
+    foreach ($group in $groups) {
+        $isMember = Get-AzADGroupMember -GroupObjectId $group.Id | Where-Object { $_.Id -eq $userId }
+       
+        if ($isMember -and $group.DisplayName -ne "Domain Users" -and $group.DisplayName -ne "Licenca_Office_365_Desabilitados") {
+            Remove-AzADGroupMember -GroupObjectId $group.Id -MemberObjectId $userId
+            Write-Host "Removido" $user.UserPrincipalName "de" $group.DisplayName
+        }
+    }
+}
+
+
+-------------------------------------------------------------------------------------
+
+foreach ($user in Get-ADUser -SearchBase "OU=Users_Disabled,DC="",DC="",DC=com,DC=br" -Filter *) {
+    $groups = Get-ADPrincipalGroupMembership $user.SamAccountName;
+    
+    foreach ($group in $groups) {
+        if ($group.Name -ne "Domain Users" -and $group.Name -ne "Licenca_Office_365_Desabilitados") {
+            Remove-ADGroupMember -Identity $group.Name -Member $user.SamAccountName -Confirm:$false;
+            Write-Host "Removido" $user.SamAccountName "de" $group.Name;
+            
+            $grouplogfile = "C:\Temp\" + $user.SamAccountName + ".txt";
+            $group.Name | Out-File -Append -FilePath $grouplogfile;
+        }
+    }
+}

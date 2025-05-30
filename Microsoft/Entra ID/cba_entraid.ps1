@@ -1,9 +1,8 @@
-# Definir o administrador
+# define the admin 
 
 $admin = "admin@domain.com"
 
-# Criar certificado autoassinado
-
+# create self signed certificate
 $params = @{
     DnsName = "sub.domain.com"
     CertStoreLocation = "Cert:\LocalMachine\My"
@@ -15,7 +14,7 @@ $params = @{
 }
 $cert = New-SelfSignedCertificate @params
 
-# Conceder permissão ao serviço ADSync
+# conceive permission to the service on ADSync
 
 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
 $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\Keys\$($rsaCert.key.UniqueName)"
@@ -25,18 +24,18 @@ $rule = New-Object Security.Accesscontrol.FileSystemAccessRule "$serviceAccount"
 $permissions.AddAccessRule($rule)
 Set-Acl -Path $path -AclObject $permissions
 
-# Verificar permissões
+# check permission 
 
 $permissions = Get-Acl -Path $path
 $permissions.Access
 
-# Configurar o Service Principal com o certificado
+# configurate Service Principal with the certificate
 
 Set-ADSyncScheduler -SyncCycleEnabled $false
 Add-EntraApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 Add-ADSyncApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 
-# Validar e reativar sincronização
+# validate and restart sync 
 
 Get-ADSyncEntraConnectorCredential
 Set-ADSyncScheduler -SyncCycleEnabled $true
