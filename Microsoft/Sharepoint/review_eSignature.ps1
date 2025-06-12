@@ -23,7 +23,7 @@ $sites | Select-Object Url, SharingCapability | Format-Table
 # (verifica se é um "site moderno" com suporte e permissões adequadas)
 $siteUrl = "https://<seu-tenant>.sharepoint.com/sites/<nomedosite>"
 $site = Get-SPOSite -Identity $siteUrl
-Write-Host "`Detalhes do site $siteUrl:"
+Write-Host "`nDetalhes do site $siteUrl"
 Write-Host "  Status: $($site.Status)"
 Write-Host "  Armazenamento: $($site.StorageUsageCurrent) MB"
 Write-Host "  Compartilhamento: $($site.SharingCapability)"
