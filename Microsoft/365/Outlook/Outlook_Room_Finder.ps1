@@ -8,7 +8,8 @@ Add-DistributionGroupMember -Identity "Distribution_Group_Name" -Member "room_na
 
 # Adding a location, floor and city to the room
 
-Set-Place -Identity "room_name@domain.com" -Rooms_Location -Rooms_Floor -City 'Rooms_City'
+Set-Place -Identity "room_name@domain.com" -Floor "rooms_floor" -City 'rooms_city'
+
 
 # The following command returns the rooms details
 
