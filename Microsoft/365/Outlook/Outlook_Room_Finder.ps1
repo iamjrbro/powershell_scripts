@@ -18,6 +18,8 @@ Get-Mailbox -RecipientTypeDetails RoomMailbox | Sort DisplayName | Get-Place | f
 
 Remove-DistributionGroupMember -Identity "Distribution_Group_Name" -Member "sala@domain.com" -Confirm:$false
 
+# to find the DGs
+Get-DistributionGroup
 
 
 
