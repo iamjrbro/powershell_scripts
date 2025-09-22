@@ -1,3 +1,5 @@
+Inicie o PowerShell como Administrador e confirme que você tem permissões (Global Administrator ou roles delegadas adequadas). Instale/atualize módulos se necessário.
+
 1. Conectar aos módulos necessários (executar uma vez)
 
 # Instalar/Atualizar módulos (faça isso se ainda não tiver)
