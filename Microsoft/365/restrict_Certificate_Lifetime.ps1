@@ -1,3 +1,5 @@
+# Execute o PowerSheel como admin
+
 # Ativando o X509Certificate
 
 Update-MgPolicyAuthenticationMethodPolicyAuthenticationMethodConfiguration `
