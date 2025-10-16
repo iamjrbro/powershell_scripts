@@ -6,11 +6,11 @@ Update-MgPolicyAuthenticationMethodPolicyAuthenticationMethodConfiguration `
   -AuthenticationMethodConfigurationId "X509Certificate" `
   -BodyParameter @{ state = "enabled" }
 
-# Definindo o limite
+# Definindo o limite (esse código está definido para 180 dias, altere conforme necessidade no campo BodyParameter)
 
 Update-MgPolicyAuthenticationMethodPolicyAuthenticationMethodConfiguration `
   -AuthenticationMethodConfigurationId "X509Certificate" `
-  -BodyParameter @{ restrictMaximumCertificateLifetime = "P90D" }
+  -BodyParameter @{ restrictMaximumCertificateLifetime = "P180D" }
 
 
 # Verificando se a police foi implementada
