@@ -1,5 +1,6 @@
 # executar PowerShell como Admin
 
 Install-Module -Name AzureAD
+Import-Module AzureAD
 Connect-AzureAD
-Set-AzureADUser -ObjectId emailAntigo -UserPrincipalName emailNovo
+Set-AzureADUser -ObjectId old -UserPrincipalName new
