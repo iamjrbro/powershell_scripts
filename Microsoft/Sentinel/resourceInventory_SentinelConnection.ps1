@@ -1,6 +1,10 @@
 # Script: Inventário de Recursos e Conexão com o Sentinel
 # Requisitos: Módulos Az.Accounts, Az.ResourceGraph, Az.OperationalInsights instalados e permissão de Reader no Workspace do Sentinel
 
+# Instale o módulo AZ
+
+Install-Module -Name Az -Repository PSGallery -Force
+
 # 1. Login e assinatura
 Connect-AzAccount
 Select-AzSubscription -SubscriptionId "<ID_DA_ASSINATURA>"
