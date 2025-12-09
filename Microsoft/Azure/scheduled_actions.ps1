@@ -36,3 +36,13 @@ New-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
                -Properties $body.properties
 
 Write-Host "Ação criada: $actionName"
+
+# Monitorar o status da ação
+Get-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
+               -ResourceGroupName $resourceGroup `
+               -Name $actionName
+
+# Cancelar o agendamento
+Remove-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
+                  -ResourceGroupName $resourceGroup `
+                  -Name $actionName -Force
