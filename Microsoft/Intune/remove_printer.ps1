@@ -1,15 +1,6 @@
 # Lista de IPs das impressoras a remover
 $ipsParaRemover = @(
-    "10.5.35.201"
-    "10.18.11.130"
-    "10.18.11.131"
-    "10.18.11.132"
-    "10.18.11.133"
-    "10.18.11.134"
-    "10.18.11.136"
-    "10.18.11.137"
-    "10.18.11.138"
-    "10.18.11.139"
+    "coloque o ip das impressoras entre parenteses"
 )
 
 $logPath = "$env:ProgramData\IntuneLogs\RemocaoImpressoras.log"
