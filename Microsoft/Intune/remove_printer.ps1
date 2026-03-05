@@ -1,6 +1,8 @@
+# remove fila de impressoras por IP
+
 # Lista de IPs das impressoras a remover
 $ipsParaRemover = @(
-    "coloque o ip das impressoras entre parenteses"
+   # coloque os IPs das impressoras entre parenteses, por exemplo: "10.98.0.2"
 )
 
 $logPath = "$env:ProgramData\IntuneLogs\RemocaoImpressoras.log"
