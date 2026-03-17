@@ -24,3 +24,22 @@ Get-DistributionGroup
 
 
 
+#Quando você cria com New-DistributionGroup -Name, esse Name vira basicamente o Display Name + alguns atributos internos.
+
+#Para alterar depois, você usa o Set-DistributionGroup.
+
+#Se a sua intenção for só mudar o nome que aparece para os usuários (o mais comum), você faz assim:
+
+Set-DistributionGroup -Identity "Distribution_Group_Name" -DisplayName "Novo Nome Bonito"
+
+#Agora, se você quiser mudar o nome interno (o atributo Name), você pode fazer:
+
+Set-DistributionGroup -Identity "Distribution_Group_Name" -Name "Novo_Nome_Interno"
+
+#Mas na prática, o que mais impacta de verdade é o e-mail (alias/SMTP). Se você quiser mudar o endereço do grupo, aí é outro comando:
+
+Set-DistributionGroup -Identity "Distribution_Group_Name" -PrimarySmtpAddress novoemail@domain.com
+
+#Ou só o alias:
+
+Set-DistributionGroup -Identity "Distribution_Group_Name" -Alias novoalias
