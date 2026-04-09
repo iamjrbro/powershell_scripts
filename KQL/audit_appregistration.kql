@@ -1,0 +1,138 @@
+KQL usado em Logic App para auditoria de criação exclusão, modificação e API Permissions de App Registration
+{
+"definition": {
+"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+"contentVersion": "1.0.0.0",
+"triggers": {
+"Recurrence": {
+"type": "Recurrence",
+"recurrence": {
+"frequency": "Minute",
+"interval": 55
+}
+}
+},
+"actions": {
+"Run_query": {
+"type": "ApiConnection",
+"inputs": {
+"method": "post",
+"path": "/queryData",
+"body": "AuditLogs\n
+| where TargetResources[0].type == \"Application\"\n| extend AppName = tostring(TargetResources[0].displayName)\n| extend AppObjectId = tostring(TargetResources[0].id)\n| extend Operation = OperationName\n| extend Actor = tostring(InitiatedBy.user.userPrincipalName)\n| project TimeGenerated, AppName, AppObjectId, Operation, Actor\n| sort by TimeGenerated desc",
+"queries": {
+"subscriptions": "subscrition_id",
+"resourcegroups": "resource_group_name",
+"resourcetype": "resource_type",
+"resourcename": "resource_name",
+"timerange": "time_range"
+}
+}
+},
+"For_each_App": {
+"type": "Foreach",
+"foreach": "@body('Run_query')?['value']",
+"actions": {
+"Init_Permissions": {
+"type": "InitializeVariable",
+"inputs": {
+"variables": [
+{
+"name": "PermissionsFormatted",
+"type": "string",
+"value": ""
+}
+]
+}
+},
+"Get_App": {
+"type": "Http",
+"inputs": {
+"method": "GET",
+"uri": "https://graph.microsoft.com/v1.0/applications/@{items('For_each_App')['AppObjectId']}?$select=requiredResourceAccess",
+"authentication": {
+"type": "ManagedServiceIdentity"
+}
+}
+},
+"For_each_API": {
+"type": "Foreach",
+"foreach": "@body('Get_App')?['requiredResourceAccess']",
+"actions": {
+"Get_SP": {
+"type": "Http",
+"inputs": {
+"method": "GET",
+"uri": "https://graph.microsoft.com/v1.0/servicePrincipals?$filter=appId eq '@{items('For_each_API')['resourceAppId']}'&$select=displayName,appRoles,oauth2PermissionScopes",
+"authentication": {
+"type": "ManagedServiceIdentity"
+}
+}
+},
+"For_each_Permission": {
+"type": "Foreach",
+"foreach": "@items('For_each_API')['resourceAccess']",
+"actions": {
+"Condition_Type": {
+"type": "If",
+"expression": {
+"equals": [
+"@items('For_each_Permission')['type']",
+"Scope"
+]
+},
+"actions": {
+"Filter_Delegated": {
+"type": "Query",
+"inputs": {
+"from": "@body('Get_SP')?['value'][0]['oauth2PermissionScopes']",
+"where": "@equals(item()?['id'], items('For_each_Permission')['id'])"
+}
+},
+"Append_Delegated": {
+"type": "AppendToStringVariable",
+"inputs": {
+"name": "PermissionsFormatted",
+"value": "@{concat('API: ', body('Get_SP')?['value'][0]['displayName'], '\\nDelegated: ', first(body('Filter_Delegated'))?['value'], '\\n---------------------\\n')}"
+}
+}
+},
+"else": {
+"actions": {
+"Filter_Application": {
+"type": "Query",
+"inputs": {
+"from": "@body('Get_SP')?['value'][0]['appRoles']",
+"where": "@equals(item()?['id'], items('For_each_Permission')['id'])"
+}
+},
+"Append_Application": {
+"type": "AppendToStringVariable",
+"inputs": {
+"name": "PermissionsFormatted",
+"value": "@{concat('API: ', body('Get_SP')?['value'][0]['displayName'], '\\nApplication: ', first(body('Filter_Application'))?['value'], '\\n---------------------\\n')}"
+}
+}
+}
+}
+}
+}
+}
+}
+},
+"Send_to_Teams": {
+"type": "ApiConnection",
+"inputs": {
+"method": "post",
+"path": "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Group chat')}",
+"body": {
+"recipient": "SEU_CHAT_ID",
+"messageBody": "<p>🔔 App detectado<br><br>App: @{items('For_each_App')['AppName']}<br>Operação: @{items('For_each_App')['Operation']}<br>Usuário: @{items('For_each_App')['Actor']}<br><br>🔐 API Permissions:<br><pre>@{variables('PermissionsFormatted')}</pre></p>"
+}
+}
+}
+}
+}
+}
+}
+}

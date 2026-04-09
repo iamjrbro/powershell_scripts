@@ -1,0 +1,182 @@
+{
+"definition": {
+"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+"contentVersion": "1.0.0.0",
+"triggers": {
+"Recurrence": {
+"recurrence": {
+"interval": 1,
+"frequency": "Day",
+"timeZone": "E. South America Standard Time",
+"schedule": {
+"hours": [
+23
+],
+"minutes": [
+0
+]
+}
+},
+"evaluatedRecurrence": {
+"interval": 1,
+"frequency": "Day",
+"timeZone": "E. South America Standard Time",
+"schedule": {
+"hours": [
+23
+],
+"minutes": [
+0
+]
+}
+},
+"type": "Recurrence"
+}
+},
+"actions": {
+"Executar_a_consulta_e_listar_os_resultados": {
+"type": "ApiConnection",
+"inputs": {
+"host": {
+"connection": {
+"name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+}
+},
+"method": "post",
+"body": "AuditLogs\n
+| where TimeGenerated >= startofday(now())\n| where Category == \"UserManagement\"\n| where OperationName == \"Add user\"\n| where Result == \"success\"\n| extend \n CreationType = iff(isnotempty(InitiatedBy.app.displayName), \"ROBO\", \"MANUAL\")\n| project \n DataHora_Criacao = format_datetime(TimeGenerated, 'yyyy-MM-dd HH:mm:ss'),\n Usuario_Criado_UPN = tostring(TargetResources[0].userPrincipalName),\n Nome_Usuario_Criado = tostring(TargetResources[0].displayName),\n Tipo_Criacao = CreationType,\n Criado_Por = iff(isnotempty(InitiatedBy.app.displayName), tostring(InitiatedBy.app.displayName), tostring(InitiatedBy.user.userPrincipalName)),\n CorrelationId = CorrelationId\n| order by DataHora_Criacao desc",
+"path": "/queryData",
+"queries": {
+"subscriptions": "subscrition_id",
+"resourcegroups": "resource_group_name",
+"resourcetype": "resource_type",
+"resourcename": "resource_name",
+"timerange": "timerange_value"
+}
+}
+},
+"Create_CSV_table": {
+"runAfter": {
+"Executar_a_consulta_e_listar_os_resultados": [
+"Succeeded"
+]
+},
+"type": "Table",
+"inputs": {
+"from": "@body('Executar_a_consulta_e_listar_os_resultados')?['value']",
+"format": "CSV",
+"columns": [
+{
+"header": "DataHora_Criacao",
+"value": "@item()?['DataHora_Criacao']"
+},
+{
+"header": "Usuario_Criado_UPN",
+"value": "@item()?['Usuario_Criado_UPN']"
+},
+{
+"header": "Nome_Usuario_Criado",
+"value": "@item()?['Nome_Usuario_Criado']"
+},
+{
+"header": "Tipo_Criacao",
+"value": "@item()?['Tipo_Criacao']"
+},
+{
+"header": "Criado_Por",
+"value": "@item()?['Criado_Por']"
+}
+]
+}
+},
+"Criar_arquivo": {
+"runAfter": {
+"Create_CSV_table": [
+"Succeeded"
+]
+},
+"type": "ApiConnection",
+"inputs": {
+"host": {
+"connection": {
+"name": "@parameters('$connections')['onedriveforbusiness']['connectionId']"
+}
+},
+"method": "post",
+"body": "@body('Create_CSV_table')",
+"path": "/datasets/default/files",
+"queries": {
+"folderPath": "folder_pah_where_file_will_be_saved",
+"name": "Criacao_Usuarios_@{utcNow('yyyy-MM-dd')}.csv"
+}
+},
+"runtimeConfiguration": {
+"contentTransfer": {
+"transferMode": "Chunked"
+}
+}
+},
+"Enviar_um_email_(V2)": {
+"runAfter": {
+"Criar_arquivo": [
+"Succeeded"
+]
+},
+"type": "ApiConnection",
+"inputs": {
+"host": {
+"connection": {
+"name": "@parameters('$connections')['office365']['connectionId']"
+}
+},
+"method": "post",
+"body": {
+"To": "accounts that has to receive the email",
+"Subject": "Audit - User creation - @{utcNow('yyyy-MM-dd')}",
+"Body": "<p>Prezados,<br><br>Segue em anexo a lista de colaboradores criados no dia pelo Robo e Manual.<br><br>Att.<br>Equipe de Segurança da Informação</p>",
+"Importance": "Normal",
+"Attachments": [
+{
+"Name": "Criacao_Usuarios_@{utcNow('yyyy-MM-dd')}.csv",
+"ContentBytes": "@base64(body('Create_CSV_table'))"
+}
+]
+},
+"path": "/v2/Mail"
+}
+}
+},
+"outputs": {},
+"parameters": {
+"$connections": {
+"type": "Object",
+"defaultValue": {}
+}
+}
+},
+"parameters": {
+"$connections": {
+"type": "Object",
+"value": {
+"azuremonitorlogs": {
+"id": "subscrition_id",
+"connectionId": "subscrition_id",
+"connectionName": "connection_name",
+"connectionProperties": {}
+},
+"onedriveforbusiness": {
+"id": "subscrition_id",
+"connectionId": "subscrition_id",
+"connectionName": "connection_name",
+"connectionProperties": {}
+},
+"office365": {
+"id": "subscrition_id",
+"connectionId": "subscrition_id",
+"connectionName": "subscrition_id",
+"connectionProperties": {}
+}
+}
+}
+}
+}
