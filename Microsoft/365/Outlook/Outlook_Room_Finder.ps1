@@ -73,3 +73,12 @@ Get-Mailbox -RecipientTypeDetails RoomMailbox | ForEach-Object {
     -WorkingHoursStartTime workingHoursStartTime  `
     -WorkingHoursEndTime workingHoursEndTime
 }
+
+# adicionando os dias da semana em que as salas podem ser agendadas
+Get-Mailbox -RecipientTypeDetails RoomMailbox | ForEach-Object {
+    Set-MailboxCalendarConfiguration $_.PrimarySmtpAddress `
+    -WorkingHoursStartTime 08:00:00 `
+    -WorkingHoursEndTime 22:00:00 `
+    -WorkingDays Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday `
+    -WorkingHoursTimeZone "E. South America Standard Time"
+}
