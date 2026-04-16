@@ -43,3 +43,33 @@ Set-DistributionGroup -Identity "Distribution_Group_Name" -PrimarySmtpAddress no
 #Ou só o alias:
 
 Set-DistributionGroup -Identity "Distribution_Group_Name" -Alias novoalias
+
+
+# verificar horário definido na mailbox
+
+Get-MailboxCalendarConfiguration "sala@domain.com" | fl WorkingHoursStartTime,WorkingHoursEndTime,WorkingHoursTimeZone
+
+# verificar Booking restriction escondida
+
+Get-CalendarProcessing "sala@domain.com" | fl AllBookInPolicy,AllRequestInPolicy,BookInPolicy
+
+# verificar Timezone errado
+
+Get-MailboxCalendarConfiguration "sala@domain.com" | fl WorkingHoursTimeZone
+
+# corrigir timezone errado para o horário de Brasília
+
+Set-MailboxCalendarConfiguration "sala@domain.com" `
+-WorkingHoursTimeZone "E. South America Standard Time"
+
+# validar timezone no horário de Brasília
+
+Get-MailboxCalendarConfiguration "sala@domain.com" | fl WorkingHoursTimeZone
+
+# padronizar horário de início e fim de agendamento das salas
+
+Get-Mailbox -RecipientTypeDetails RoomMailbox | ForEach-Object {
+    Set-MailboxCalendarConfiguration $_.PrimarySmtpAddress `
+    -WorkingHoursStartTime workingHoursStartTime  `
+    -WorkingHoursEndTime workingHoursEndTime
+}
