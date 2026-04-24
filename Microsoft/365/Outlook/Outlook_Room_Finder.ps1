@@ -1,3 +1,14 @@
+# Installing the Exchange Online Management module to manage the Room Mailboxes
+ 
+Install-Module -Name ExchangeOnlineManagement
+
+# Importing the module to use the cmdlets
+Import-Module ExchangeOnlineManagement
+
+# Connecting to Exchange Online with the current user credentials. You can also specify credentials if needed
+Connect ExchangeOnline
+
+
 # Creating a Distribution Group to add the Room List
 
 New-DistributionGroup -Name "Distribution_Group_Name" -RoomList
