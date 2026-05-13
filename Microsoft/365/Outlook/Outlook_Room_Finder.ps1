@@ -93,3 +93,14 @@ Get-Mailbox -RecipientTypeDetails RoomMailbox | ForEach-Object {
     -WorkingDays Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday `
     -WorkingHoursTimeZone "E. South America Standard Time"
 }
+
+# escolhe/libera os workdays de todas salas
+
+Get-Mailbox -RecipientTypeDetails RoomMailbox | ForEach-Object {
+    Set-MailboxCalendarConfiguration $_.Identity `
+    -WorkDays Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday
+}
+
+# escolhe/libera os workdays para determinada sala
+
+Get-MailboxCalendarConfiguration "nome_da_sala" | fl WorkDays
