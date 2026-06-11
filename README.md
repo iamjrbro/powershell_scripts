@@ -6,9 +6,9 @@ Repositório pessoal contendo scripts PowerShell voltados para administração, 
 
 Este repositório foi criado para centralizar scripts utilizados em ambientes corporativos, facilitando tarefas administrativas, geração de relatórios, auditorias, automações e operações recorrentes executadas por equipes de infraestrutura e cloud.
 
-## Principais Categorias
+# Principais Categorias
 
-# Microsoft 365
+## Microsoft 365
 
 Scripts para administração e automação de workloads do Microsoft 365, incluindo:
 
