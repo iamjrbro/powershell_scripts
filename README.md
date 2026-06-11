@@ -6,33 +6,9 @@ Repositório pessoal contendo scripts PowerShell voltados para administração, 
 
 Este repositório foi criado para centralizar scripts utilizados em ambientes corporativos, facilitando tarefas administrativas, geração de relatórios, auditorias, automações e operações recorrentes executadas por equipes de infraestrutura e cloud.
 
-## Estrutura do Repositório
+## Principais Categorias
 
-```text
-powershell_scripts
-│
-├── General_Install
-│   └── Scripts de instalação e configuração inicial
-│
-├── KQL
-│   └── Consultas Kusto Query Language (KQL)
-│
-├── Microsoft
-│   ├── 365
-│   ├── Exchange
-│   ├── Entra ID
-│   ├── Intune
-│   └── Outros serviços Microsoft
-│
-├── intune_Report.ps1
-├── microsoft_places.ps1
-├── emptyfileforinputscript.ps1
-└── README.md
-
-
-# Principais Categorias
-
-Microsoft 365
+# Microsoft 365
 
 Scripts para administração e automação de workloads do Microsoft 365, incluindo:
 
@@ -112,3 +88,29 @@ Contribuições são bem-vindas. Caso encontre melhorias, correções ou novas a
 Aviso
 
 Os scripts são fornecidos "como estão", sem garantias. Utilize por sua conta e risco, validando sempre os impactos antes da execução em ambientes produtivos.
+
+
+## Estrutura do Repositório
+
+```text
+powershell_scripts
+│
+├── General_Install
+│   └── Scripts de instalação e configuração inicial
+│
+├── KQL
+│   └── Consultas Kusto Query Language (KQL)
+│
+├── Microsoft
+│   ├── 365
+│   ├── Exchange
+│   ├── Entra ID
+│   ├── Intune
+│   └── Outros serviços Microsoft
+│
+├── intune_Report.ps1
+├── microsoft_places.ps1
+├── emptyfileforinputscript.ps1
+└── README.md
+
+
