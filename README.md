@@ -30,9 +30,8 @@ powershell_scripts
 └── README.md
 
 
-escreve o texto abaixo em markdown
+# Principais Categorias
 
-Principais Categorias
 Microsoft 365
 
 Scripts para administração e automação de workloads do Microsoft 365, incluindo:
