@@ -1,6 +1,5 @@
-# executar PowerShell como Admin
+# altere o nome do user no AD local | não executar o PS como admin
 
-Install-Module -Name AzureAD
-Import-Module AzureAD
-Connect-AzureAD
-Set-AzureADUser -ObjectId old -UserPrincipalName new
+Install-Module Microsoft.Graph -Scope CurrentUser
+Connect-MgGraph -Scopes "User.ReadWrite.All"
+Update-MgUser -UserId oldusername@yourdomain.com.br -UserPrincipalName newusername@yourdomain.com.br
