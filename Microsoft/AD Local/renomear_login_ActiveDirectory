@@ -2,4 +2,4 @@
 
 Install-Module Microsoft.Graph -Scope CurrentUser
 Connect-MgGraph -Scopes "User.ReadWrite.All"
-Update-MgUser -UserId oldusername@yourdomain.com.br -UserPrincipalName newusername@yourdomain.com.br
+Update-MgUser -UserId tuanne.luiz@sebsa.com.br -UserPrincipalName tuanne.luz @sebsa.com.br
