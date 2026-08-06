@@ -1,4 +1,4 @@
-#run CMD ad administrator
+#run CMD as administrator
 
 cd %ProgramFiles%\Windows Defender
 MpCmdRun.exe -removedefinitions -dynamicsignatures
