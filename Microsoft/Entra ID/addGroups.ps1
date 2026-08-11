@@ -100,16 +100,3 @@ foreach ($usuarioUPN in $usuarios) {
     }
 }
 ```
-
-### Mas eu mudaria uma coisa
-
-Se você tiver **muitos usuários**, não vale a pena fazer `Get-MgGroupMember -All` para cada combinação usuário × grupo. Com 100 usuários × 30 grupos, seriam **3.000 consultas**.
-
-Dá para fazer uma versão mais eficiente que:
-
-1. Busca os **30 grupos uma única vez**.
-2. Busca os usuários.
-3. Verifica/adiciona cada combinação.
-4. Gera um **log CSV** dizendo `Adicionado`, `Já era membro`, `Grupo não encontrado`, `Erro`, etc.
-
-Se for para usar isso em ambiente corporativo, **eu recomendo essa versão otimizada**.
