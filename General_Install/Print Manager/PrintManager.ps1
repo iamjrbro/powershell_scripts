@@ -1,1 +1,0 @@
-DISM /online /add-capability /CapabilityName:Print.Management.Console
