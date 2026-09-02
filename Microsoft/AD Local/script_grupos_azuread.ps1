@@ -23,10 +23,6 @@ foreach ($group in $groups) {
     Check-GroupEmpty -GroupId $group.ObjectId
 }
 
-
-
------------------------------------------------------------------------------
-
 Connect-AzAccount 
 $groups = Get-AzADGroup
 $users = Get-AzADUser -Filter "accountEnabled eq false"
@@ -44,7 +40,6 @@ foreach ($user in $users) {
 }
 
 
--------------------------------------------------------------------------------------
 
 foreach ($user in Get-ADUser -SearchBase "OU=Users_Disabled,DC="",DC="",DC=com,DC=br" -Filter *) {
     $groups = Get-ADPrincipalGroupMembership $user.SamAccountName;
