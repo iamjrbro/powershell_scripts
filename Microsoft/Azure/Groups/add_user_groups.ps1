@@ -1,20 +1,29 @@
+<#
+.SYNOPSIS
+Adiciona usuários aos grupos do Microsoft Entra ID informados.
 
-# Script para adicionar usuários a grupos no Microsoft Entra ID (Azure AD) usando Microsoft Graph PowerShell SDK
+.DESCRIPTION
+Consulta cada usuário, localiza os grupos pelo displayName, verifica se o usuário já é membro e adiciona a associação quando necessário.
 
+.PREREQUISITES
+Requer Microsoft Graph PowerShell SDK e permissões User.Read.All e Group.ReadWrite.All.
+#>
+
+# Conecta ao Microsoft Graph.
 Connect-MgGraph -Scopes "User.Read.All", "Group.ReadWrite.All"
 
+# Usuários que receberão os grupos.
 $usuarios = @(
     "user.upn@domain.com"
 )
 
-# Grupos que todos os usuários receberão
+# Grupos que serão atribuídos a todos os usuários.
 $grupos = @(
     "G1",
     "G2"
 )
 
 foreach ($usuarioUPN in $usuarios) {
-
     Write-Host "`n=====================================" -ForegroundColor Cyan
     Write-Host "Usuário: $usuarioUPN" -ForegroundColor Cyan
     Write-Host "=====================================" -ForegroundColor Cyan
@@ -28,8 +37,8 @@ foreach ($usuarioUPN in $usuarios) {
     }
 
     foreach ($nomeGrupo in $grupos) {
-
         try {
+            # Localiza o grupo pelo displayName.
             $grupo = Get-MgGroup `
                 -Filter "displayName eq '$nomeGrupo'" `
                 -ConsistencyLevel eventual `
@@ -45,7 +54,7 @@ foreach ($usuarioUPN in $usuarios) {
                 continue
             }
 
-            # Verifica se já é membro
+            # Verifica se o usuário já é membro do grupo.
             $membro = Get-MgGroupMember `
                 -GroupId $grupo.Id `
                 -All |
@@ -56,7 +65,7 @@ foreach ($usuarioUPN in $usuarios) {
                 continue
             }
 
-            # Adiciona
+            # Adiciona o usuário ao grupo.
             New-MgGroupMemberByRef `
                 -GroupId $grupo.Id `
                 -OdataId "https://graph.microsoft.com/v1.0/directoryObjects/$($usuario.Id)"
@@ -68,4 +77,3 @@ foreach ($usuarioUPN in $usuarios) {
         }
     }
 }
-
