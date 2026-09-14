@@ -1,8 +1,18 @@
-# define the admin 
+<#
+.SYNOPSIS
+Configura autenticação baseada em certificado para o Microsoft Entra Connect Sync.
 
+.DESCRIPTION
+Cria um certificado autoassinado, concede acesso à chave privada para a conta do serviço ADSync, associa o certificado ao registro de aplicação e demonstra o processo de rotação de credenciais.
+
+.NOTES
+Substitua os valores de administrador e DNS pelos valores do ambiente antes da execução. Execute com privilégios administrativos no servidor do Entra Connect Sync.
+#>
+
+# Define a conta administrativa utilizada para registrar a aplicação.
 $admin = "admin@domain.com"
 
-# create self signed certificate
+# Cria um certificado autoassinado para autenticação baseada em certificado.
 $params = @{
     DnsName = "sub.domain.com"
     CertStoreLocation = "Cert:\LocalMachine\My"
@@ -14,8 +24,7 @@ $params = @{
 }
 $cert = New-SelfSignedCertificate @params
 
-# conceive permission to the service on ADSync
-
+# Concede permissão de leitura da chave privada à conta do serviço ADSync.
 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
 $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\Keys\$($rsaCert.key.UniqueName)"
 $permissions = Get-Acl -Path $path
@@ -24,24 +33,24 @@ $rule = New-Object Security.Accesscontrol.FileSystemAccessRule "$serviceAccount"
 $permissions.AddAccessRule($rule)
 Set-Acl -Path $path -AclObject $permissions
 
-# check permission 
-
+# Valida as permissões aplicadas à chave privada.
 $permissions = Get-Acl -Path $path
 $permissions.Access
 
-# configurate Service Principal with the certificate
-
+# Configura o Service Principal e o Entra Connect Sync para utilizar o certificado.
 Set-ADSyncScheduler -SyncCycleEnabled $false
 Add-EntraApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 Add-ADSyncApplicationRegistration –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
 
-# validate and restart sync 
-
+# Valida a credencial e reativa a sincronização.
 Get-ADSyncEntraConnectorCredential
 Set-ADSyncScheduler -SyncCycleEnabled $true
-Rotação de Certificado (Rollover)
-Repetir o processo com um novo certificado:
 
+# ============================================================================
+# ROTAÇÃO DE CERTIFICADO (ROLLOVER)
+# ============================================================================
+
+# Repete o processo com um novo certificado para realizar a rotação da credencial.
 Set-ADSyncScheduler -SyncCycleEnabled $false
 
 $params = @{
@@ -55,6 +64,7 @@ $params = @{
 }
 $cert = New-SelfSignedCertificate @params
 
+# Concede acesso à nova chave privada para a conta do serviço ADSync.
 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
 $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\Keys\$($rsaCert.key.UniqueName)"
 $permissions = Get-Acl -Path $path
@@ -63,4 +73,5 @@ $rule = New-Object Security.Accesscontrol.FileSystemAccessRule "$serviceAccount"
 $permissions.AddAccessRule($rule)
 Set-Acl -Path $path -AclObject $permissions
 
+# Executa a rotação da credencial da aplicação.
 Invoke-ADSyncApplicationCredentialRotation –UserPrincipalName $admin -CertificateThumbprint $cert.Thumbprint
