@@ -16,7 +16,7 @@ Import-Module Microsoft.Graph
 # Conecta ao Microsoft Graph.
 Connect-MgGraph -Scopes Group.Read.All
 
-# Arquivo TXT contendo um GUID por linha.
+# Arquivo TXT contendo um GUID de grupo por linha.
 $ids = Get-Content "C:\Users\juliad.ribeiro\zanshin.txt"
 
 $result = foreach ($id in $ids) {
@@ -91,4 +91,5 @@ $result = foreach ($id in $ids) {
 # Exporta o resultado para CSV.
 $result | Export-Csv "C:\Temp\objetos.csv" -NoTypeInformation -Encoding UTF8
 
-Write-Host "Arquivo gerado em C:\Temp\objetos.csv"
+# Exibe o caminho do arquivo gerado conforme o script original.
+Write-Host "Arquivo gerado em C:\Temp\grupos.csv"
