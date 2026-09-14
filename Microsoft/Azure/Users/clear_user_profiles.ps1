@@ -1,15 +1,26 @@
-#sets the variable with the number of days of inactivity (30 days in this example)
+<#
+.SYNOPSIS
+Remove perfis locais de usuários que estão inativos há mais de 30 dias.
+
+.DESCRIPTION
+Identifica perfis locais não especiais cujo último uso ocorreu antes da data de corte e remove esses perfis. O arquivo também documenta como agendar a execução pelo Task Scheduler.
+
+.WARNING
+A remoção de perfis locais é destrutiva. Valide o período de inatividade e os perfis encontrados antes de automatizar a execução.
+#>
+
+# Define o período de inatividade em dias.
 $daysInactive = 30
 
-#gets the current date minus the number of days of inactivity
+# Calcula a data de corte com base no período de inatividade.
 $cutoffDate = (Get-Date).AddDays(-$daysInactive)
 
-#gets the user profiles by deleting them from the system
+# Obtém perfis de usuário não especiais que não são utilizados desde a data de corte.
 $profiles = Get-CimInstance -ClassName Win32_UserProfile | Where-Object {
     $_.Special -eq $false -and $_.LastUseTime -lt $cutoffDate
 }
 
-#removes inactive user profiles
+# Remove os perfis inativos encontrados.
 foreach ($profile in $profiles) {
     try {
         Remove-WmiObject -InputObject $profile
@@ -19,24 +30,15 @@ foreach ($profile in $profiles) {
     }
 }
 
-
---Save the above script to a .ps1 file (e.g., CleanProfiles.ps1)
-
-Schedule execution via Task Scheduler:
-- press Win+R, type taskschd.msc, and press Enter to open Task Scheduler
-- in the right pane, click Create Task
-
-Basic task settings:
-- on the General tab, give the task a name, such as "Cleaning User Profiles"
-- check the Run with higher privileges option
-
-Setting a Trigger:
-- go to the Triggers tab and click New
-
-Set to run Daily at the time you wish it to run:
-- go to the Actions tab and click New.
-- choose "Start a program"
-- under Program/Script, look for powershell.exe
-- under "Add arguments", enter the following argument:
-
--ExecutionPolicy Bypass -File "C:\scripts\CleanProfiles.ps1"
+# ============================================================================
+# AGENDAMENTO PELO TASK SCHEDULER
+# ============================================================================
+# Salve o script em um arquivo .ps1, por exemplo: CleanProfiles.ps1.
+# Para agendar a execução:
+# 1. Pressione Win+R, digite taskschd.msc e pressione Enter.
+# 2. No painel direito, selecione Create Task.
+# 3. Na aba General, informe um nome e habilite Run with highest privileges.
+# 4. Na aba Triggers, crie um gatilho diário no horário desejado.
+# 5. Na aba Actions, selecione Start a program e informe powershell.exe.
+# 6. Em Add arguments, utilize:
+#    -ExecutionPolicy Bypass -File "C:\scripts\CleanProfiles.ps1"
