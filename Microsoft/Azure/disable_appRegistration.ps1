@@ -1,16 +1,27 @@
-# Conecte ao Microsoft Graph com permissões adequadas
+<#
+.SYNOPSIS
+Desabilita um App Registration no Microsoft Entra ID.
 
+.DESCRIPTION
+Conecta ao Microsoft Graph e define o atributo isDisabled da aplicação como true. O arquivo também documenta a abordagem para desabilitar múltiplas aplicações.
+
+.WARNING
+Desabilitar uma aplicação pode interromper autenticações e integrações. Valide o App Registration antes da alteração.
+#>
+
+# Conecta ao Microsoft Graph com permissão para alterar aplicações.
 Connect-MgGraph -Scopes "Application.ReadWrite.All"
 
-# subistitua o <ObjectId> pelo Object ID da aplicação:
-
+# Substitua <ObjectId> pelo Object ID da aplicação que será desabilitada.
 Update-MgApplication -ApplicationId <ObjectId> -BodyParameter @{ isDisabled = $true }
 
-# após a execução, o atributo isDisabled será definido como verdadeiro, bloqueando novas autenticações.
+# Após a execução, isDisabled será definido como true.
 
+# ============================================================================
+# DESABILITAR MÚLTIPLOS APPS
+# ============================================================================
 
-# DESATIVAR MULTIPLOS APPS
-
-# processo consiste em: listar aplicações com base em critérios específicos (por exemplo, apps sem uso recente ou sem owners válidos), iterar sobre cada ObjectId e aplicar o comando definindo isDisabled = $true:
-
-Update-MgApplication  isDisabled = $true
+# A abordagem consiste em listar aplicações conforme critérios definidos,
+# iterar pelos respectivos Object IDs e definir isDisabled = $true.
+# Exemplo conceitual:
+# Update-MgApplication -ApplicationId <ObjectId> -BodyParameter @{ isDisabled = $true }
