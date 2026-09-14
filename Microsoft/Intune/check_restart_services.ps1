@@ -1,6 +1,14 @@
-# Parâmetro: nome do serviço a verificar
+<#
+.SYNOPSIS
+Verifica se um serviço do Windows está em execução e tenta iniciá-lo caso esteja parado.
+
+.DESCRIPTION
+Recebe o nome do serviço como parâmetro, verifica seu estado e inicia o serviço quando necessário. Retorna códigos de saída compatíveis com automações.
+#>
+
+# Parâmetro com o nome do serviço a verificar.
 param (
-    [string]$ServiceName = "wuauserv"  # Serviço Windows Update como exemplo
+    [string]$ServiceName = "wuauserv"  # Windows Update como exemplo.
 )
 
 $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
