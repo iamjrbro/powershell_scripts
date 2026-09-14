@@ -1,4 +1,4 @@
-<comment-based help>
+<#
 .SYNOPSIS
 Gera um inventário de App Registrations, credenciais e autenticações recentes.
 
