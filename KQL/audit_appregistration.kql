@@ -1,4 +1,5 @@
 KQL usado em Logic App para auditoria de criação exclusão, modificação e API Permissions de App Registration
+
 {
 "definition": {
 "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",

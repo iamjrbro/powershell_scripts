@@ -1,7 +1,6 @@
-Antes, gerar um csv com os logins dos usuarios desativados dos ultimos 90 dias (ou prazo no qual vc executou a ultima vez o script)
+#Script para remover usuários dos grupos do office 365
+#Antes, gerar um csv com os logins dos usuarios desativados dos ultimos 90 dias (ou prazo no qual vc executou a ultima vez o script)
 
-
-Script para remover usuários dos grupos do office 365:
 # Instale o módulo AzureAD se ainda não estiver instalado
 Install-Module -Name AzureAD
  

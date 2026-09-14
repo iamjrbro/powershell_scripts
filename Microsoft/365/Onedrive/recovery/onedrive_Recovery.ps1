@@ -1,13 +1,17 @@
+# Instalar os módulos necessários. Se já tiver instalado, pode pular essa etapa
+
+Install-Module PnP.PowerShell -Scope CurrentUser -Force #PNP PowerShell, para conectar no OneDrive do usuário e restaurar arquivos da lixeira
+Import-Module PnP.PowerShell # importe o módulo PnP PowerShell para usar os cmdlets do PnP
+
+Install-Module Microsoft.Graph -Scope CurrentUser -Force #módulo Microsoft Graph, para descobrir o tenant e o domínio do tenant
+
+Get-MgOrganization | Select-Object Id, DisplayName
+
 
 # descobrir o tenant .onmicrosoft.com. No PowerShell, rode:
 
 Connect-MgGraph -Scopes "Organization.Read.All"
 
-# se não tiver o módulo
-
-Install-Module Microsoft.Graph -Scope CurrentUser -Force
-
-Get-MgOrganization | Select-Object Id, DisplayName
 
 
 # Para descobrir o domínio:
@@ -54,13 +58,6 @@ Connect-PnPOnline `
 Get-PnPWeb | Select-Object Title, Url
 
 
-Se retornar algo como abaixo, deu certo
-
-Title       Url
------       ---
-OneDrive    https://sistemaseb-my.sharepoint.com/personal/...
-
-
 #  Primeiro vamos descobrir se os arquivos estão na lixeira
 
 $Recycle1 = Get-PnPRecycleBinItem -FirstStage
@@ -100,17 +97,23 @@ $Recycle2 |
     Sort-Object Count -Descending |
     Select-Object -First 30 Name, Count
 
-# restaurar os arquivos da lixeira. Se quiser restaurar apenas alguns arquivos, filtre o $Recycle2 antes do foreach.
 
+$TodosItens = @($Recycle1) + @($Recycle2)
 
-$Log = @()
+Write-Host "Total de itens para restaurar: $($TodosItens.Count)" -ForegroundColor Cyan
 
-foreach ($Item in $Recycle2) {
+$Log = foreach ($Item in $TodosItens) {
 
     try {
-        Restore-PnPRecycleBinItem -Identity $Item.Id -Force -ErrorAction Stop
 
-        $Log += [PSCustomObject]@{
+        Restore-PnPRecycleBinItem `
+            -Identity $Item.Id `
+            -Force `
+            -ErrorAction Stop
+
+        Write-Host "[OK] $($Item.LeafName)" -ForegroundColor Green
+
+        [PSCustomObject]@{
             Status       = "RESTAURADO"
             Nome         = $Item.LeafName
             Caminho      = $Item.DirName
@@ -119,11 +122,12 @@ foreach ($Item in $Recycle2) {
             Erro         = ""
         }
 
-        Write-Host "[OK] $($Item.LeafName)"
     }
     catch {
 
-        $Log += [PSCustomObject]@{
+        Write-Host "[ERRO] $($Item.LeafName) - $($_.Exception.Message)" -ForegroundColor Red
+
+        [PSCustomObject]@{
             Status       = "ERRO"
             Nome         = $Item.LeafName
             Caminho      = $Item.DirName
@@ -131,7 +135,14 @@ foreach ($Item in $Recycle2) {
             ExcluidoPor  = $Item.DeletedByName
             Erro         = $_.Exception.Message
         }
-
-        Write-Host "[ERRO] $($Item.LeafName) - $($_.Exception.Message)" -ForegroundColor Red
     }
 }
+
+# verificar se os arquivos foram restaurados em ambas lixeira
+
+$FirstAfter = Get-PnPRecycleBinItem -FirstStage
+$SecondAfter = Get-PnPRecycleBinItem -SecondStage
+
+"Primeira etapa agora: $($FirstAfter.Count)"
+"Segunda etapa agora: $($SecondAfter.Count)"
+"Total agora: $($FirstAfter.Count + $SecondAfter.Count)"

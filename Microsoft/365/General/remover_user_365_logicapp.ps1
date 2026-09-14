@@ -110,11 +110,11 @@ OBTER USUÁRIOS DESATIVADOS
 
   
 
-> para evitar a remoção de usuários de grupos específicos (os de exceção), use a ação Filtro de Matriz para remover grupos não relevantes do fluxo de trabalho, filtrando pelo nome do grupo ou usando o ID do grupo se já o tiver listado 
+# para evitar a remoção de usuários de grupos específicos (os de exceção), use a ação Filtro de Matriz para remover grupos não relevantes do fluxo de trabalho, filtrando pelo nome do grupo ou usando o ID do grupo se já o tiver listado 
 
   
 
-VERIFICAÇÃO E REMOÇÃO DE USUÁRIOS DE GRUPO  
+##VERIFICAÇÃO E REMOÇÃO DE USUÁRIOS DE GRUPO  
 
 1. Para cada usuário desativado, adicione uma Ação de Aplicar a cada e configure uma ação de iteração 
 
@@ -166,9 +166,9 @@ VERIFICAÇÃO E REMOÇÃO DE USUÁRIOS DE GRUPO
 
   
 
-LOG E MONITORAMENTO 
+#LOG E MONITORAMENTO 
 
-Adicione ações de log ao longo do fluxo para rastrear usuários removidos e capturar erros, como o  Monitor 
+#Adicione ações de log ao longo do fluxo para rastrear usuários removidos e capturar erros, como o  Monitor 
 
   
 
