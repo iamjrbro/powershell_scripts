@@ -1,5 +1,19 @@
+<#
+.SYNOPSIS
+Executa ciclos de sincronização do Microsoft Entra Connect Sync.
+
+.DESCRIPTION
+Importa o módulo ADSync e inicia um ciclo Initial seguido de um ciclo Delta, útil para testes e troubleshooting de sincronização.
+
+.NOTES
+Execute no servidor que possui o Microsoft Entra Connect Sync instalado.
+#>
+
+# Importa o módulo de gerenciamento do Entra Connect Sync.
 Import-Module ADSync
 
-Start-ADSyncSyncCycle -PolicyType Initial #this command will start a full sync cycle, which is useful for testing and troubleshooting
+# Inicia uma sincronização Initial, útil para testes e troubleshooting.
+Start-ADSyncSyncCycle -PolicyType Initial
 
-Start-ADSyncSyncCycle Delta # this command will start a delta sync cycle, which is useful for testing and troubleshooting
+# Inicia uma sincronização Delta, útil para testes e troubleshooting.
+Start-ADSyncSyncCycle Delta
