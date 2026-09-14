@@ -1,18 +1,29 @@
-# Variáveis principais
+<#
+.SYNOPSIS
+Cria, consulta e remove uma Scheduled Action para VMs do Azure.
+
+.DESCRIPTION
+Define as VMs alvo, monta a configuração da ação agendada, cria o recurso, consulta seu status e demonstra como removê-lo.
+
+.NOTES
+Substitua subscription, Resource Group, localização, VMs e horário pelos valores do ambiente.
+#>
+
+# Define os parâmetros principais da ação agendada.
 $subscriptionId = "<sua-subscription>"
 $resourceGroup  = "<seu-resource-group>"
 $location       = "eastus"
-$vmNames        = @("vm01","vm02","vm03")  # até 100 VMs por chamada
-$scheduledTime  = "2025-01-20T23:00:00Z"   # horário do agendamento
+$vmNames        = @("vm01","vm02","vm03")  # Até 100 VMs por chamada.
+$scheduledTime  = "2025-01-20T23:00:00Z"   # Horário do agendamento.
 
-# Login e seleção da subscription
+# Autentica e seleciona a subscription.
 Connect-AzAccount
 Set-AzContext -Subscription $subscriptionId
 
-# Criação do corpo da ação agendada
+# Cria o corpo da Scheduled Action.
 $body = @{
     properties = @{
-        actionType   = "Stop"                 # valores possíveis: Start, Stop, Hibernate
+        actionType   = "Stop"                 # Valores possíveis: Start, Stop, Hibernate.
         scheduleType = "Scheduled"
         schedule     = $scheduledTime
         resources    = $vmNames | ForEach-Object {
@@ -23,10 +34,10 @@ $body = @{
     }
 }
 
-# Conversão para JSON
+# Converte o corpo para JSON.
 $bodyJson = $body | ConvertTo-Json -Depth 10
 
-# Criação da ação agendada
+# Cria a ação agendada.
 $actionName = "agendamento-stop-" + (Get-Random)
 New-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
                -ApiVersion "2024-10-01" `
@@ -37,12 +48,12 @@ New-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
 
 Write-Host "Ação criada: $actionName"
 
-# Monitorar o status da ação
+# Consulta o status da ação criada.
 Get-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
                -ResourceGroupName $resourceGroup `
                -Name $actionName
 
-# Cancelar o agendamento
+# Remove a ação agendada.
 Remove-AzResource -ResourceType "Microsoft.ScheduledActions/scheduledActions" `
                   -ResourceGroupName $resourceGroup `
                   -Name $actionName -Force
