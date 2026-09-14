@@ -1,22 +1,31 @@
-Inicie o PowerShell como Administrador e confirme que você tem permissões (Global Administrator ou roles delegadas adequadas). Instale/atualize módulos se necessário.
+<#
+.SYNOPSIS
+Reúne exemplos de configuração e auditoria de segurança para Microsoft Teams e Microsoft 365.
 
-1. Conectar aos módulos necessários (executar uma vez)
+.DESCRIPTION
+O arquivo documenta exemplos de conexão aos módulos Microsoft Graph, Exchange Online, Teams e Compliance, além de exemplos conceituais de Safe Links, Safe Attachments, DLP, restrição de acesso externo e auditoria.
 
-# Instalar/Atualizar módulos (faça isso se ainda não tiver)
+.WARNING
+Alguns blocos deste arquivo são exemplos conceituais e utilizam endpoints ou cmdlets que podem variar conforme o módulo e o serviço. Valide o cmdlet, endpoint e payload na documentação oficial antes de executar em produção.
+#>
+
+# Inicie o PowerShell como Administrador e confirme as permissões administrativas necessárias.
+# Instale ou atualize os módulos utilizados pelos exemplos, quando necessário.
 Install-Module -Name Microsoft.Graph -Scope CurrentUser -Force
 Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
 Install-Module -Name MicrosoftTeams -Scope CurrentUser -Force
 Install-Module -Name Microsoft.Graph.Security -Scope CurrentUser -Force
 
-# Conectar ao Microsoft Graph (delegated)
+# Conecta ao Microsoft Graph com as permissões necessárias para os exemplos abaixo.
 Connect-MgGraph -Scopes "Policy.ReadWrite.ApplicationConfiguration","SecurityEvents.ReadWrite.All","SecurityEvents.Read.All","InformationProtectionPolicy.ReadWrite.All","Compliance.ReadWrite.Dlp","TeamSettings.ReadWrite.All"
 
-# Conectar ao Exchange Online (requer MFA/admin)
+# Conecta ao Exchange Online.
 Import-Module ExchangeOnlineManagement
 Connect-ExchangeOnline -UserPrincipalName seu.admin@dominio.com
 
-# Conectar ao Teams (separado; algumas configurações são via Teams module)
+# Conecta ao Microsoft Teams.
 Connect-MicrosoftTeams -AccountId seu.admin@dominio.com
+
 Criar/ativar uma política Safe Links (via REST fallback)
 Observação: o portal do Defender cria políticas Safe Links; via PowerShell a disponibilidade de cmdlets varia. O script abaixo tenta o método preferencial (quando houver cmdlet funcional) e faz fallback para o Graph (REST). Ajuste DisplayName, Description e Users conforme seu piloto/escopo.
 
