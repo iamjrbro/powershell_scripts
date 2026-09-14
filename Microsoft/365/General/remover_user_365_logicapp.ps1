@@ -1,175 +1,112 @@
-LOGIC APP 
+# Microsoft 365 — Remoção de usuários desativados de grupos
 
-1. Logic Apps  + Criar 
+# Este arquivo documenta a configuração de uma Logic App para identificar usuários
+# desativados no Microsoft Entra ID e removê-los de grupos, respeitando exceções.
 
-2. Nome, grupo de recursos e localização 
+## 1. Criar a Logic App
 
-3. Criar 
+1. No Azure Portal, acesse Logic Apps e crie uma nova Logic App.
+2. Defina o nome, grupo de recursos e localização.
+3. Conclua a criação do recurso.
 
-  
+## 2. Configurar o gatilho de recorrência
 
-GATILHOS DE RECORRÊNCIA 
+1. Dentro da Logic App, adicione o gatilho de recorrência.
+2. Configure o intervalo de execução desejado, por exemplo, uma vez ao mês.
 
-1. Dentro do Logic, para definição do intervalo de execução  
+## 3. Obter um token de acesso para o Microsoft Graph
 
-2. Configure o intervalo de tempo de execução (por exemplo, uma vez ao mês). 
+Para autenticar as chamadas ao Microsoft Graph, a Logic App utiliza um token OAuth 2.0.
 
-  
+1. Adicione uma ação HTTP para obter o token de acesso:
 
-AÇÃO DE AUTENTICAÇÃO (HTTP) 
+   - Método: POST
+   - URL: `https://login.microsoftonline.com/{TenantID}/oauth2/v2.0/token`
+   - Cabeçalhos:
 
- - para autenticar com o Microsoft Graph, o Logic App precisa de um Azure AD OAuth Token 
+     ```json
+     {
+       "Content-Type": "application/x-www-form-urlencoded"
+     }
+     ```
 
-  
+   - Corpo:
 
-1. Adicione uma nova ação chamada HTTP e configure-a para obter um token de acesso: 
+     ```text
+     grant_type=client_credentials
+     &client_id={ClientID}
+     &client_secret={ClientSecret}
+     &scope=https://graph.microsoft.com/.default
+     ```
 
-   - Método: POST 
+   - Substitua `{TenantID}`, `{ClientID}` e `{ClientSecret}` pelos valores da aplicação registrada no Microsoft Entra ID, com as permissões necessárias no Microsoft Graph, como `User.Read.All` e `GroupMember.ReadWrite.All`.
 
-   - URL: `https://login.microsoftonline.com/{TenantID}/oauth2/v2.0/token` 
+2. Obtenha o token da resposta usando `@body('HTTP')['access_token']` e armazene-o em uma variável para as chamadas seguintes.
 
-   - Cabeçalhos:  
+## 4. Obter usuários desativados
 
-     ```json 
+1. Adicione uma ação HTTP para consultar os usuários desativados no Microsoft Graph:
 
-     { 
+   - Método: GET
+   - URL: `https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq false`
+   - Cabeçalhos:
 
-       "Content-Type": "application/x-www-form-urlencoded" 
+     ```json
+     {
+       "Authorization": "Bearer @{variables('access_token')}"
+     }
+     ```
 
-     } 
+2. Utilize a resposta para iterar sobre os usuários desativados.
 
-     ``` 
+## 5. Obter e filtrar grupos
 
-   - Corpo: 
+1. Adicione uma ação HTTP para obter os grupos no Microsoft Graph:
 
-     ```text 
+   - Método: GET
+   - URL: `https://graph.microsoft.com/v1.0/groups`
+   - Cabeçalhos:
 
-     grant_type=client_credentials 
+     ```json
+     {
+       "Authorization": "Bearer @{variables('access_token')}"
+     }
+     ```
 
-     &client_id={ClientID} 
+2. Para evitar a remoção de usuários de grupos de exceção, utilize a ação Filtro de Matriz para manter somente os grupos que devem ser processados. A filtragem pode ser feita pelo nome ou pelo ID do grupo.
 
-     &client_secret={ClientSecret} 
+## 6. Verificar e remover usuários dos grupos
 
-     &scope=https://graph.microsoft.com/.default 
+1. Para cada usuário desativado, adicione uma ação Aplicar a cada para processar o usuário individualmente.
+2. Dentro da iteração, adicione uma ação HTTP para obter os grupos aos quais o usuário pertence:
 
-     ``` 
+   - Método: GET
+   - URL: `https://graph.microsoft.com/v1.0/users/{UserID}/memberOf`
+   - Cabeçalhos:
 
-   - Substitua `{TenantID}`, `{ClientID}`, e `{ClientSecret}` pelos valores da sua Aplicação Registrada no Azure AD com permissões adequadas para o Graph (User.Read.All e GroupMember.ReadWrite.All). 
+     ```json
+     {
+       "Authorization": "Bearer @{variables('access_token')}"
+     }
+     ```
 
-  
+   - Substitua `{UserID}` pelo ID do usuário desativado.
 
-2. Pegue o token de acesso da resposta usando uma expressão `@body('HTTP')['access_token']` e armazene-o numa variável para ser usado em chamadas futuras 
+3. Para cada grupo retornado, verifique se ele não está na lista de exceções.
+4. Se o grupo não estiver na lista de exceções, adicione uma ação HTTP para remover o usuário:
 
-  
+   - Método: DELETE
+   - URL: `https://graph.microsoft.com/v1.0/groups/{GroupID}/members/{UserID}/$ref`
+   - Cabeçalhos:
 
-OBTER USUÁRIOS DESATIVADOS  
+     ```json
+     {
+       "Authorization": "Bearer @{variables('access_token')}"
+     }
+     ```
 
-1. Adicione uma ação HTTP para fazer uma chamada GET ao Microsoft Graph e obter todos os usuários desativados: 
+   - Substitua `{GroupID}` pela ID do grupo e `{UserID}` pela ID do usuário.
 
-   - Método: GET 
+## 7. Logs e monitoramento
 
-   - URL: `https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq false` 
-
-   - Cabeçalhos:  
-
-     ```json 
-
-     { 
-
-       "Authorization": "Bearer @{variables('access_token')}" 
-
-     } 
-
-     ``` 
-
-  
-
-2. Passe a resposta para iterar nos usuários desativados 
-
-  
-
-  5: Obter e Filtrar Grupos 
-
-1. Adicione uma ação HTTP para obter todos os grupos no Azure AD: 
-
-   - Método: GET 
-
-   - URL: `https://graph.microsoft.com/v1.0/groups` 
-
-   - Cabeçalhos:  
-
-     ```json 
-
-     { 
-
-       "Authorization": "Bearer @{variables('access_token')}" 
-
-     } 
-
-     ``` 
-
-  
-
-# para evitar a remoção de usuários de grupos específicos (os de exceção), use a ação Filtro de Matriz para remover grupos não relevantes do fluxo de trabalho, filtrando pelo nome do grupo ou usando o ID do grupo se já o tiver listado 
-
-  
-
-##VERIFICAÇÃO E REMOÇÃO DE USUÁRIOS DE GRUPO  
-
-1. Para cada usuário desativado, adicione uma Ação de Aplicar a cada e configure uma ação de iteração 
-
-2. Dentro de cada iteração de usuário, adicione uma ação HTTP para obter todos os grupos a que o usuário pertence: 
-
-   - Método: GET 
-
-   - URL: `https://graph.microsoft.com/v1.0/users/{UserID}/memberOf` 
-
-   - Cabeçalhos:  
-
-     ```json 
-
-     { 
-
-       "Authorization": "Bearer @{variables('access_token')}" 
-
-     } 
-
-     ``` 
-
-   - Substitua `{UserID}` pela ID do usuário desativado. 
-
-  
-
-3. Para cada grupo do usuário, adicione uma ação para verificar se o grupo não está na lista de exceções. 
-
-  
-
-4. Adicione uma ação HTTP para remover o usuário do grupo se ele não estiver na lista de exceções: 
-
-   - Método: DELETE 
-
-   - URL: `https://graph.microsoft.com/v1.0/groups/{GroupID}/members/{UserID}/$ref` 
-
-   - Cabeçalhos:  
-
-     ```json 
-
-     { 
-
-       "Authorization": "Bearer @{variables('access_token')}" 
-
-     } 
-
-     ``` 
-
-   - Substitua `{GroupID}` pela ID do grupo e `{UserID}` pela ID do usuário. 
-
-  
-
-#LOG E MONITORAMENTO 
-
-#Adicione ações de log ao longo do fluxo para rastrear usuários removidos e capturar erros, como o  Monitor 
-
-  
-
- 
+Adicione ações de log ao longo do fluxo para registrar usuários processados, remoções realizadas e erros. Utilize o monitoramento da Logic App para acompanhar execuções com falha e validar o comportamento da automação.
