@@ -1,51 +1,59 @@
-# Desabilitar Soft Delete no ambiente
+<#
+.SYNOPSIS
+Remove backups de VMs de um Recovery Services Vault, incluindo itens em Soft Delete.
+
+.DESCRIPTION
+Contém exemplos para interromper a proteção, remover recovery points, identificar itens em Soft Delete, executar purge e reativar o Soft Delete.
+
+.WARNING
+As operações de remoção de recovery points e purge são destrutivas e podem impedir a recuperação dos dados. Revise o vault, a subscription e os itens antes da execução.
+#>
+
+# Desabilita temporariamente o Soft Delete no ambiente.
 Set-AzRecoveryServicesVaultProperty -VaultId $vault.ID -SoftDeleteFeatureState Disable
 
-# Excluir backup e remover dados imediatamente, item por item
-
+# Exclui o backup de uma VM e remove os recovery points imediatamente.
 Connect-AzAccount
 Select-AzSubscription -SubscriptionId "SUBSCRIPTION-ID"
 
-# 1. Definir variáveis
+# Define as variáveis do vault e do item de backup.
 $vaultName = "VAULT-NAME"
 $resourceGroupName = "RESOURCE-GROUP-NAME"
-$backupItemName = "BACKUP-ITEM-NAME" # Nome do item de backup (ex: nome da VM)
+$backupItemName = "BACKUP-ITEM-NAME" # Nome do item de backup, por exemplo, o nome da VM.
 
-# 2. Obter o Cofre e o Item de Backup
+# Obtém o Recovery Services Vault e o item de backup.
 $vault = Get-AzRecoveryServicesVault -Name $vaultName -ResourceGroupName $resourceGroupName
 $item = Get-AzRecoveryServicesBackupItem -VaultId $vault.ID -BackupManagementType AzureVM -WorkloadType AzureVM -Name $backupItemName
 
-# 3. Interromper proteção e remover dados imediatamente
+# Interrompe a proteção e remove os recovery points.
 Disable-AzRecoveryServicesBackupProtection -Item $item -RemoveRecoveryPoints -Force -VaultId $vault.ID
 
-------------------------------------------------------------------------------------------------------------------------
-
-
-# Excluir todos backups em Soft Delete (Purge)
+# ============================================================================
+# PURGE DE BACKUPS EM SOFT DELETE
+# ============================================================================
 
 Connect-AzAccount
 Select-AzSubscription -SubscriptionId "SUBSCRIPTION-ID"
 
-# Variáveis
+# Define as variáveis do vault.
 $vaultName = "VAULT-NAME"
 $resourceGroupName = "RESOURCE-GROUP-NAME"
 
-# Obter o Vault
+# Obtém o vault.
 $vault = Get-AzRecoveryServicesVault -Name $vaultName -ResourceGroupName $resourceGroupName
 
-# Definir contexto do Vault
+# Define o contexto do Recovery Services Vault.
 Set-AzRecoveryServicesVaultContext -Vault $vault
 
-# Buscar todos os itens de VM em Soft Delete
+# Busca todos os itens de VM em Soft Delete.
 $items = Get-AzRecoveryServicesBackupItem `
     -BackupManagementType AzureVM `
     -WorkloadType AzureVM `
     -DeleteState ToBeDeleted
 
-# Loop para purge definitivo
+# Executa o purge definitivo dos itens encontrados.
 foreach ($item in $items) {
-
-    Write-Host "Removendo definitivamente backup de:" $item.Name
+    Write-Host "Removendo definitivamente o backup de: $($item.Name)"
 
     Disable-AzRecoveryServicesBackupProtection `
         -Item $item `
@@ -55,21 +63,18 @@ foreach ($item in $items) {
 
 Write-Host "Purge concluído para todos os backups em Soft Delete."
 
+# ============================================================================
+# CONSULTA DE BACKUPS
+# ============================================================================
 
-
---------------------------------------------------------------------------
-
-# Para enxergar rapidamente todas as VMs registradas no backup do vault e identificar quais ainda estão em Soft Delete, você pode usar um único comando PowerShell que já retorna o status relevante
-
+# Lista as VMs registradas no backup do vault e seus respectivos estados.
 Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM |
 Select-Object Name, ProtectionStatus, DeleteState, HealthStatus
 
-# Se quiser que o PowerShell destaque apenas as que estão em Soft Delete, você pode usar:
-
+# Lista somente os itens que estão em Soft Delete.
 Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM |
 Where-Object {$_.DeleteState -eq "ToBeDeleted"} |
 Select-Object Name, ProtectionStatus, DeleteState
 
-
-# Reativar Soft Delete no ambiente, caso necessário
+# Reativa o Soft Delete no ambiente, caso necessário.
 Set-AzRecoveryServicesVaultProperty -VaultId $vault.ID -SoftDeleteFeatureState Enable
