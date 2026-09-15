@@ -1,7 +1,18 @@
-# Instalar o módulo (caso ainda não tenha)
+<#
+.SYNOPSIS
+Inventaria atribuições de funções administrativas do Microsoft Entra ID.
+
+.DESCRIPTION
+Consulta definições de funções e atribuições no Microsoft Graph e identifica o tipo de principal associado, como usuário, grupo, service principal ou dispositivo.
+
+.PREREQUISITES
+Requer Microsoft Graph PowerShell SDK e permissões RoleManagement.Read.Directory e Directory.Read.All.
+#>
+
+# Instala o Microsoft.Graph caso ainda não esteja disponível.
 Install-Module Microsoft.Graph -Scope CurrentUser -Force
 
-# Importar os módulos necessários
+# Importa os módulos necessários.
 Import-Module Microsoft.Graph.Authentication
 Import-Module Microsoft.Graph.Identity.Governance
 Import-Module Microsoft.Graph.Users
@@ -9,10 +20,10 @@ Import-Module Microsoft.Graph.Groups
 Import-Module Microsoft.Graph.Applications
 Import-Module Microsoft.Graph.Identity.DirectoryManagement
 
-# Conectar ao Microsoft Graph
+# Conecta ao Microsoft Graph.
 Connect-MgGraph -Scopes "RoleManagement.Read.Directory","Directory.Read.All"
 
-# Buscar definições de funções e atribuições
+# Obtém as definições de funções e as respectivas atribuições.
 $roles = Get-MgRoleManagementDirectoryRoleDefinition -All
 $roleAssignments = Get-MgRoleManagementDirectoryRoleAssignment -All
 
@@ -24,7 +35,7 @@ $result = foreach ($assignment in $roleAssignments) {
     $type = "Unknown"
     $upn = "-"
 
-    # Usuário
+    # Tenta identificar o principal como usuário.
     try {
         $obj = Get-MgUser -UserId $assignment.PrincipalId -ErrorAction Stop
         $name = $obj.DisplayName
@@ -33,7 +44,7 @@ $result = foreach ($assignment in $roleAssignments) {
     }
     catch {
 
-        # Grupo
+        # Se não for usuário, tenta identificar como grupo.
         try {
             $obj = Get-MgGroup -GroupId $assignment.PrincipalId -ErrorAction Stop
             $name = $obj.DisplayName
@@ -41,7 +52,7 @@ $result = foreach ($assignment in $roleAssignments) {
         }
         catch {
 
-            # Service Principal
+            # Se não for grupo, tenta identificar como service principal.
             try {
                 $obj = Get-MgServicePrincipal -ServicePrincipalId $assignment.PrincipalId -ErrorAction Stop
                 $name = $obj.DisplayName
@@ -49,7 +60,7 @@ $result = foreach ($assignment in $roleAssignments) {
             }
             catch {
 
-                # Device
+                # Se não for service principal, tenta identificar como dispositivo.
                 try {
                     $obj = Get-MgDevice -DeviceId $assignment.PrincipalId -ErrorAction Stop
                     $name = $obj.DisplayName
@@ -71,6 +82,7 @@ $result = foreach ($assignment in $roleAssignments) {
     }
 }
 
+# Exibe o resultado ordenado por função e principal.
 $result |
     Sort-Object RoleName, PrincipalName |
     Format-Table RoleName, PrincipalName, PrincipalType, UserPrincipalName, Scope -AutoSize

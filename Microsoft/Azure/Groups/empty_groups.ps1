@@ -1,15 +1,28 @@
-USANDO MODULO AZURE AD
+<#
+.SYNOPSIS
+Identifica grupos sem membros usando AzureAD ou Microsoft Graph.
 
-# Instalar o módulo, se necessário
+.DESCRIPTION
+Apresenta duas abordagens equivalentes para localizar grupos vazios: uma utilizando o módulo AzureAD e outra utilizando Microsoft Graph.
+
+.NOTES
+O módulo AzureAD é legado. Para novos desenvolvimentos, prefira Microsoft Graph.
+#>
+
+# ============================================================================
+# ABORDAGEM COM AZUREAD
+# ============================================================================
+
+# Instala o módulo, se necessário.
 # Install-Module AzureAD -Scope CurrentUser
 
-# Conectar ao Azure AD
+# Conecta ao Azure AD.
 Connect-AzureAD
 
-# Obter todos os grupos
+# Obtém todos os grupos.
 $groups = Get-AzureADGroup -All $true
 
-# Inicializar lista de grupos vazios
+# Inicializa a lista de grupos vazios.
 $emptyGroups = @()
 
 foreach ($group in $groups) {
@@ -23,25 +36,26 @@ foreach ($group in $groups) {
     }
 }
 
-# Exibir os grupos vazios
+# Exibe os grupos vazios.
 $emptyGroups | Format-Table -AutoSize
 
+# ============================================================================
+# ABORDAGEM COM MICROSOFT GRAPH
+# ============================================================================
 
-USANDO GRAPH
-
-# Instalar o módulo, se necessário
+# Instala o módulo, se necessário.
 # Install-Module Microsoft.Graph -Scope CurrentUser
 
-# Conectar ao Microsoft Graph
+# Conecta ao Microsoft Graph.
 Connect-MgGraph -Scopes "Group.Read.All"
 
-# Obter todos os grupos
+# Obtém todos os grupos.
 $allGroups = Get-MgGroup -All
 
-# Inicializar lista de grupos vazios
+# Inicializa a lista de grupos vazios.
 $emptyGroups = @()
 
-# Verificar membros de cada grupo
+# Verifica os membros de cada grupo.
 foreach ($group in $allGroups) {
     $members = Get-MgGroupMember -GroupId $group.Id -ErrorAction SilentlyContinue
     if (!$members) {
@@ -54,5 +68,5 @@ foreach ($group in $allGroups) {
     }
 }
 
-# Exibir os grupos vazios
+# Exibe os grupos vazios.
 $emptyGroups | Format-Table -AutoSize

@@ -1,66 +1,48 @@
-# script para detectar dispositivos gerenciados pelo Intune que estão inativos há mais de 90 dias e **notificar automaticamente um canal do Teams**.
+<#
+.SYNOPSIS
+Identifica dispositivos Intune sem sincronização há mais de 90 dias e envia um alerta para um canal do Teams.
 
-  
+.DESCRIPTION
+Utiliza o módulo Generate-IntuneAnomaliesReport para gerar o inventário, filtra dispositivos com mais de 90 dias sem sincronização e envia um resumo por webhook.
 
-##  PRÉ-REQUISITOS
+.PREREQUISITES
+Requer Microsoft Graph, o módulo Generate-IntuneAnomaliesReport e um webhook válido do Teams.
+#>
 
-# Permissões para acessar Microsoft Intune via Graph API (com `Connect-MgGraph`)
-# Permissão para adicionar conectores no canal do Microsoft Teams
-# PowerShell 5.1+ ou 7.x com o módulo `Generate-IntuneAnomaliesReport` instalado
+# Instale os módulos necessários uma vez, se ainda não estiverem disponíveis.
+# Install-Module -Name Generate-IntuneAnomaliesReport -Force
+# Install-Module -Name Microsoft.Graph -Force
 
-  
-
-## ETAPA 1 – Criar Webhook no canal do Teams
-
-# 1. Acesse o **Microsoft Teams**.
-# 2. Vá até o **canal desejado**.
-# 3. Clique em **“...” > Conectores**.
-# 4. Busque e adicione **“Incoming Webhook”**.
-# 5. Dê um nome como `Alerta Intune`.
-# 6. (Opcional) Adicione um ícone personalizado.
-# 7. Copie o **URL gerado** (ex: `https://outlook.office.com/webhook/...`).
-# 8. Salve esse URL, pois será usado no script.
-
-  
-
-## ETAPA 2 – Script PowerShell para gerar relatório e enviar alerta
-
-### Instale os módulos necessários (uma vez):
-
-```powershell
-Install-Module -Name Generate-IntuneAnomaliesReport -Force
-Install-Module -Name Microsoft.Graph -Force
-```
-
-# Autentica no Microsoft Graph
+# Conecta ao Microsoft Graph com permissão de leitura dos dispositivos gerenciados.
 Connect-MgGraph -Scopes "DeviceManagementManagedDevices.Read.All"
 
-# Carrega o módulo e gera o relatório
+# Importa o módulo e gera o relatório de anomalias.
 Import-Module Generate-IntuneAnomaliesReport
 $report = Get-IntuneAnomaliesReport
 
-# Filtra dispositivos com mais de 90 dias sem sincronizar
+# Filtra dispositivos com mais de 90 dias sem sincronização.
 $inativos = $report | Where-Object {
     ($_.'Last Sync DateTime') -lt (Get-Date).AddDays(-90)
 }
 
-# Conta os inativos
+# Conta os dispositivos inativos.
 $totalInativos = $inativos.Count
 
-# Se houver dispositivos inativos, envia alerta no Teams
+# Se houver dispositivos inativos, envia um alerta para o Teams.
 if ($totalInativos -gt 0) {
+    # Substitua pelo webhook utilizado no ambiente.
     $teamsWebhookUrl = "https://outlook.office.com/webhook/SEU_WEBHOOK_URL_AQUI"
 
-    # Monta lista de nomes (máximo 10 para evitar mensagem truncada)
+    # Limita a lista exibida aos dez primeiros dispositivos.
     $nomes = $inativos | Select-Object -First 10 -ExpandProperty 'Device Name'
     $listaFormatada = ($nomes | ForEach-Object { "- $_" }) -join "`n"
 
-    # Adiciona nota se houver mais de 10
+    # Informa quantos dispositivos adicionais ficaram fora da lista resumida.
     if ($totalInativos -gt 10) {
         $listaFormatada += "`n...e mais $($totalInativos - 10) dispositivos."
     }
 
-    # Monta mensagem para Teams
+    # Monta a mensagem enviada ao Teams.
     $mensagem = @{
         title = " Alerta: Dispositivos Inativos no Intune"
         text  = "Foram encontrados **$totalInativos dispositivos** que não sincronizam há mais de 90 dias:`n$listaFormatada"

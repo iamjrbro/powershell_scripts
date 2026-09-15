@@ -1,20 +1,19 @@
-## it lists objectId, appId and displayName of Enterprise Apps register on an especific domain
+# Lista App Registrations por domínio, exibindo ObjectId, AppId e DisplayName.
 
 Connect-AzureAD
 $domain = "domain"
 Get-AzureADApplication | Where-Object { $_.Homepage -like "*$domain*" -or $_.IdentifierUris -like "*$domain*" }
 
----------------------------------------------------------------------------------------------------------------------
+# Lista Enterprise Applications e as URLs associadas.
 
-## it gets all the Enterprise Applications and it's associate URLs
 Connect-AzureAD
-# gets all Enterprise Application
+
+# Obtém todas as Enterprise Applications (Service Principals).
 $applications = Get-AzureADServicePrincipal
-# run then and show it's URLs 
+
+# Exibe Homepage, ReplyUrls e IdentifierUris de cada aplicação.
 foreach ($app in $applications) {
-   # checks if the app got an Homepage, ReplyUrls or IdentifierUris
    $appUrls = @($app.Homepage, $app.ReplyUrls, $app.IdentifierUris)
-   # shows all the Enterprise Applications and it's associate URLs
    Write-Host "Application: $($app.DisplayName)"
    foreach ($url in $appUrls) {
        if ($url) {

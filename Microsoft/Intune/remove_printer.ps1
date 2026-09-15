@@ -1,8 +1,17 @@
-# remove fila de impressoras por IP
+<#
+.SYNOPSIS
+Remove filas de impressão associadas aos IPs informados.
 
-# Lista de IPs das impressoras a remover
+.DESCRIPTION
+Percorre os IPs configurados, localiza filas de impressão pela porta e remove as filas encontradas. As operações são registradas em arquivo de log.
+
+.NOTES
+Preencha $ipsParaRemover antes da execução.
+#>
+
+# Lista de IPs das impressoras cujas filas devem ser removidas.
 $ipsParaRemover = @(
-   # coloque os IPs das impressoras entre parenteses, por exemplo: "10.98.0.2"
+   # Informe os IPs das impressoras, por exemplo: "10.98.0.2"
 )
 
 $logPath = "$env:ProgramData\IntuneLogs\RemocaoImpressoras.log"

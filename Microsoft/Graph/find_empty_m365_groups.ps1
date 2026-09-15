@@ -1,15 +1,26 @@
-# Instalar o módulo Microsoft.Graph, se não estiver instalado
+<#
+.SYNOPSIS
+Identifica grupos Microsoft 365 (Unified) sem membros.
+
+.DESCRIPTION
+Instala/importa o Microsoft Graph PowerShell SDK quando necessário, consulta grupos do tipo Unified e exibe quais estão vazios.
+
+.PREREQUISITES
+Requer Microsoft Graph PowerShell SDK e permissão Group.Read.All.
+#>
+
+# Instala o módulo Microsoft.Graph caso ainda não esteja disponível.
 if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
     Install-Module Microsoft.Graph -Scope CurrentUser -Force
 }
 
-# Importar o módulo Microsoft.Graph
+# Importa o módulo Microsoft.Graph.
 Import-Module Microsoft.Graph
 
-# Conectar ao Microsoft Graph com autenticação interativa
+# Conecta ao Microsoft Graph com autenticação interativa.
 Connect-MgGraph -Scopes "Group.Read.All"
 
-# Função para verificar se um grupo está vazio
+# Verifica se um grupo está vazio.
 function Check-GroupEmpty {
     param (
         [Parameter(Mandatory = $true)]
@@ -23,7 +34,7 @@ function Check-GroupEmpty {
     }
 }
 
-# Obter todos os grupos do tipo Unified
+# Obtém todos os grupos do tipo Unified (Microsoft 365 Groups).
 $groups = Get-MgGroup -Filter "groupTypes/any(c:c eq 'Unified')" -All
 
 $results = @()
@@ -39,5 +50,5 @@ foreach ($group in $groups) {
     $results += $groupResult
 }
 
-# Opcional: mostrar os resultados
+# Exibe os resultados.
 $results | Format-Table -AutoSize

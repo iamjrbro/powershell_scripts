@@ -1,16 +1,26 @@
+<#
+.SYNOPSIS
+Gera um relatório dos usuários convidados do Microsoft Entra ID e de seus últimos sign-ins.
+
+.DESCRIPTION
+Conecta ao Microsoft Graph, lista usuários do tipo Guest com paginação, consulta o último sign-in de cada usuário e exporta os dados para CSV.
+
+.PREREQUISITES
+Requer o módulo Microsoft.Graph e permissões User.Read.All, User.ReadWrite.All e Group.ReadWrite.All.
+#>
+
 Install-Module Microsoft.Graph
 
- 
- # 1. Conectar ao Microsoft Graph com autenticação interativa
-Connect-MgGraph -Scopes "User.Read.All", "User.ReadWrite.All", "Group.ReadWrite.All" 
+# Conecta ao Microsoft Graph com autenticação interativa.
+Connect-MgGraph -Scopes "User.Read.All", "User.ReadWrite.All", "Group.ReadWrite.All"
 
-# Verifica se a conexão deu certo
+# Verifica se a conexão foi estabelecida.
 if (-not (Get-MgContext)) {
     Write-Error "Erro ao conectar ao Microsoft Graph."
     exit
 }
 
-# 2. Buscar todos os usuários convidados com paginação
+# Obtém todos os usuários convidados com paginação.
 $guestUsers = @()
 $uri = "https://graph.microsoft.com/v1.0/users?\$filter=userType eq 'Guest'&\$top=100"
 
@@ -28,7 +38,7 @@ do {
 
 Write-Host "Total de convidados encontrados: $($guestUsers.Count)"
 
-# 3. Buscar último login para cada usuário
+# Consulta o último sign-in de cada usuário convidado.
 $report = @()
 
 foreach ($user in $guestUsers) {
@@ -60,10 +70,10 @@ foreach ($user in $guestUsers) {
     }
 }
 
-# 4. Exportar relatório para CSV
+# Exporta o relatório para CSV.
 $csvPath = "$env:USERPROFILE\Desktop\logins_guest.csv"
 $report | Export-Csv $csvPath -NoTypeInformation -Encoding UTF8
 Write-Host "Relatório exportado para: $csvPath"
 
-# 5. Mostrar na tela (opcional)
+# Exibe o relatório na tela.
 $report | Sort-Object LastSignIn -Descending | Format-Table -AutoSize
