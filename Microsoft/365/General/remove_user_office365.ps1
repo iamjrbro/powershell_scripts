@@ -1,29 +1,64 @@
-#Script para remover usuários dos grupos do office 365
-#Antes, gerar um csv com os logins dos usuarios desativados dos ultimos 90 dias (ou prazo no qual vc executou a ultima vez o script)
+<#!
+.SYNOPSIS
+Remove usuários desativados dos grupos de segurança do Microsoft Entra ID.
 
-# Instale o módulo AzureAD se ainda não estiver instalado
-Install-Module -Name AzureAD
- 
-# Conecte-se ao Azure AD com credenciais administrativas
-Connect-AzureAD
- 
-# Leia o arquivo CSV com os logins. Certifique-se de que o CSV tem uma coluna "User", "Login" ou "Name" com os UPNs dos usuários.
-$usuarios = Import-Csv -Path "c:\scripts\logins_desativados.csv"
+.DESCRIPTION
+Lê um CSV contendo a coluna UserLoginName, localiza cada usuário no Microsoft
+Entra ID e remove o usuário dos grupos dos quais ele é membro.
+
+.NOTES
+Requer Microsoft Graph PowerShell SDK e as permissões User.Read.All e
+Group.ReadWrite.All. Revise o CSV e teste em homologação antes da execução.
+Grupos dinâmicos não podem ser gerenciados por remoção direta de membros.
+#>
+
+$CsvPath = "C:\scripts\logins_desativados.csv"
+
+if (-not (Test-Path -LiteralPath $CsvPath)) {
+    Write-Error "Arquivo CSV não encontrado: $CsvPath"
+    exit 1
+}
+
+Connect-MgGraph -Scopes "User.Read.All", "Group.ReadWrite.All"
+
+$usuarios = Import-Csv -LiteralPath $CsvPath
 
 foreach ($usuario in $usuarios) {
-    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$($usuario.UserLoginName)'"
+    $upn = $usuario.UserLoginName
 
-    if ($user) {
-        $grupos = Get-AzureADUserMembership -ObjectId $user.ObjectId
+    if ([string]::IsNullOrWhiteSpace($upn)) {
+        Write-Warning "Linha do CSV sem UserLoginName. Ignorando."
+        continue
+    }
 
-        if ($grupos) {
-            foreach ($grupo in $grupos) {
-                Remove-AzureADGroupMember -ObjectId $grupo.ObjectId -MemberId $user.ObjectId
-            }
-        } else {
-            Write-Host "Nenhum grupo encontrado para o usuário $($usuario.UserLoginName)."
+    try {
+        $user = Get-MgUser -UserId $upn -ErrorAction Stop
+        $membros = Get-MgUserMemberOf -UserId $user.Id -All -ErrorAction Stop
+
+        $grupos = $membros | Where-Object {
+            $_.AdditionalProperties.'@odata.type' -eq '#microsoft.graph.group'
         }
-    } else {
-        Write-Host "Usuário $($usuario.UserLoginName) não encontrado."
+
+        if (-not $grupos) {
+            Write-Host "Nenhum grupo encontrado para $upn." -ForegroundColor Yellow
+            continue
+        }
+
+        foreach ($grupo in $grupos) {
+            try {
+                Remove-MgGroupMemberByRef `
+                    -GroupId $grupo.Id `
+                    -DirectoryObjectId $user.Id `
+                    -ErrorAction Stop
+
+                Write-Host "$upn -> removido do grupo $($grupo.Id)" -ForegroundColor Green
+            }
+            catch {
+                Write-Warning "$upn -> não foi possível remover do grupo $($grupo.Id): $($_.Exception.Message)"
+            }
+        }
+    }
+    catch {
+        Write-Warning "Não foi possível processar $upn: $($_.Exception.Message)"
     }
 }
