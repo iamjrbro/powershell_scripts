@@ -18,7 +18,6 @@ $item = Get-AzRecoveryServicesBackupItem -VaultId $vault.ID -BackupManagementTyp
 # 3. Interromper proteção e remover dados imediatamente
 Disable-AzRecoveryServicesBackupProtection -Item $item -RemoveRecoveryPoints -Force -VaultId $vault.ID
 
-------------------------------------------------------------------------------------------------------------------------
 
 
 # Excluir todos backups em Soft Delete (Purge)
@@ -55,9 +54,6 @@ foreach ($item in $items) {
 
 Write-Host "Purge concluído para todos os backups em Soft Delete."
 
-
-
---------------------------------------------------------------------------
 
 # Para enxergar rapidamente todas as VMs registradas no backup do vault e identificar quais ainda estão em Soft Delete, você pode usar um único comando PowerShell que já retorna o status relevante
 
