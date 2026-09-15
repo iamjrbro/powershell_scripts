@@ -1,64 +1,40 @@
+<#!
+.SYNOPSIS
+Gera um relatório de grupos do Microsoft Entra ID sem membros.
 
-# Installing ExchangeOnlineManagement
-Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force -AllowClobber
+.DESCRIPTION
+Conecta ao Microsoft Graph, consulta grupos do diretório e exporta os grupos
+sem membros para um arquivo CSV.
 
-# Charging ExchangeOnlineManagement's module
-Import-Module ExchangeOnlineManagement
+.NOTES
+Requer Microsoft Graph PowerShell SDK e permissões Group.Read.All e Directory.Read.All.
+O caminho de saída pode ser alterado pela variável $OutputPath.
+#>
 
-# Getting user's credencials 
-$UserCredential = Get-Credential
+$OutputPath = ".\EmptyGroups.csv"
 
-# Connecting to Microsoft 365 with provided credentials 
-Connect-ExchangeOnline -UserPrincipalName $UserCredential.UserName -Credential $UserCredential
+Connect-MgGraph -Scopes "Group.Read.All", "Directory.Read.All"
 
-# Getting a list of all user's mailboxes 
-Get-Mailbox
+Write-Host "Coletando grupos..." -ForegroundColor Cyan
+$groups = Get-MgGroup -All -Property Id,DisplayName,GroupTypes
 
-# Disconnecting Microsoft 365's session
-Disconnect-ExchangeOnline -Confirm:$false
+$emptyGroups = foreach ($group in $groups) {
+    try {
+        $members = Get-MgGroupMember -GroupId $group.Id -All -ErrorAction Stop
 
-
-
-
-
-
-
-
-
-
-
-
-
-# Verificar se o módulo AzureAD está instalado e instalar se necessário
-if (-not (Get-Module -ListAvailable -Name Azure)) {
-    Install-Module -Name AzureAD -Scope CurrentUser -Force -AllowClobber
-}
-
-# Carregar o módulo AzureAD
-Import-Module AzureAD
-
-# Solicitar as credenciais do usuário
-$UserCredential = Get-Credential
-
-# Conectar-se ao AzureAD com as credenciais fornecidas
-Connect-AzureAD -Credential $UserCredential
-
-# Obter a lista de todos os grupos
-$groups = Get-AzureADGroup -All $true
-
-# Criar uma lista para armazenar os grupos sem membros
-$emptyGroups = @()
-
-# Verificar cada grupo para membros
-foreach ($group in $groups) {
-    $members = Get-AzureADGroupMember -ObjectId $group.ObjectId -All $true -ErrorAction SilentlyContinue
-    if (-not $members) {
-        $emptyGroups += [PSCustomObject]@{
-            DisplayName = $group.DisplayName
-            ObjectId    = $group.ObjectId
+        if (-not $members) {
+            [PSCustomObject]@{
+                DisplayName = $group.DisplayName
+                ObjectId    = $group.Id
+                GroupTypes  = ($group.GroupTypes -join ',')
+            }
         }
+    }
+    catch {
+        Write-Warning "Não foi possível consultar os membros do grupo '$($group.DisplayName)': $($_.Exception.Message)"
     }
 }
 
-# Exportar a lista de grupos sem membros para um arquivo CSV
-$emptyGroups | Export-Csv -Path "C:\Caminho\Para\Seu\Arquivo\EmptyGroups.csv" -NoTypeInformation -Encoding UTF8
+$emptyGroups | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
+
+Write-Host "Relatório exportado para: $OutputPath" -ForegroundColor Green
