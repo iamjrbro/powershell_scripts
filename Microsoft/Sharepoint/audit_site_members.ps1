@@ -1,6 +1,6 @@
+# Auditoria de grupos e membros do SharePoint Online em modo somente leitura, percorre todas as coleções de sites do tenant e seus subsites, identificando grupos do SharePoint, respectivos membros e grupos sem membros.
+# Gera um relatório CSV com os grupos e membros encontrados e outro com os erros ocorridos durante a auditoria. O script não realiza alterações no ambiente.
 
-# auditoria de grupos do SharePoint Online: somente leitura, não modifica o ambiente
-# audita todos os grupos e membros de todas as coleções de sites e subsites do tenant
 
 $TenantName = "TENANT_NAME"
 $ClientId   = "CLIENT_ID" # crie um Enterprise Application no Entra ID e configure as permissões Microsoft Graph: "Group.ReadWrite.All", "User.ReadWrite.All" e SharePoint "AllSites.FullControl", "TermStore.ReadWrite.All" e "User.ReadWrite.All"
