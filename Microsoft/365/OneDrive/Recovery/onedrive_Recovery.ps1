@@ -24,7 +24,7 @@ Connect-MgGraph -Scopes "Organization.Read.All"
 
 Register-PnPEntraIDAppForInteractiveLogin `
     -ApplicationName "PnP-OneDrive-Recovery" `
-    -Tenant "DOMÍNIO_DO_SEU_TENANT"
+    -Tenant "ID_DO_SEU_TENANT"
 
 # Depois descubra o Client ID criado
 
@@ -135,6 +135,38 @@ $Log = foreach ($Item in $TodosItens) {
             ExcluidoPor  = $Item.DeletedByName
             Erro         = $_.Exception.Message
         }
+    }
+}
+
+# restaurar os arquivos da lixeira
+Restore-PnPRecycleBinItem -Identity $Item.Id -Force
+
+# restaurar os todos arquivos da lixeira de primeira etapa
+Get-PnPRecycleBinItem | ForEach-Object {
+    Restore-PnPRecycleBinItem -Identity $_.Id -Force
+}
+
+
+# restaurar os todos arquivos da lixeira de segunda etapa
+Get-PnPRecycleBinItem -SecondStage | ForEach-Object {
+    Restore-PnPRecycleBinItem -Identity $_.Id -Force
+}
+
+# restaurar os arquivos de ambas lixeiras, primeira e segunda etapa
+$Recycle1 = Get-PnPRecycleBinItem
+$Recycle2 = Get-PnPRecycleBinItem -SecondStage
+
+$TodosItens = @($Recycle1) + @($Recycle2)
+
+Write-Host "Total de itens para restaurar: $($TodosItens.Count)" -ForegroundColor Cyan
+
+foreach ($Item in $TodosItens) {
+    try {
+        Restore-PnPRecycleBinItem -Identity $Item.Id -Force -ErrorAction Stop
+        Write-Host "[OK] $($Item.LeafName)" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[ERRO] $($Item.LeafName): $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
